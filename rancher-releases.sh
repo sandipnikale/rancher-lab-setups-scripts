@@ -23,7 +23,6 @@ add_helm_repo() {
     local repo_url=$2
     if ! check_helm_repo "$repo_name"; then
         helm repo add "$repo_name" "$repo_url" > /dev/null 2>&1
-        helm repo update > /dev/null 2>&1
     fi
 }
 
@@ -34,6 +33,9 @@ check_helm_installed
 add_helm_repo "rancher-latest" "https://releases.rancher.com/server-charts/latest"
 add_helm_repo "rancher-stable" "https://releases.rancher.com/server-charts/stable"
 add_helm_repo "rancher-prime" "https://charts.rancher.com/server-charts/prime"
+
+# Update all Helm repositories
+helm repo update > /dev/null 2>&1
 
 # Get the prime release versions, skipping the header and limiting to 25 rows
 prime_versions=$(helm search repo rancher-prime/rancher --versions | awk 'NR>1 {print $1, $2}' | head -n 25 | column -t)

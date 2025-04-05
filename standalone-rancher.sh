@@ -167,42 +167,72 @@ echo "K3S is installed successfully..."
 install_rancher(){
 echo "$(date +'%F %H:%M:%S') Status: Installing rancher..."
 
-# add helm
-sudo curl -#L https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+# Prompt for Helm repo
+echo "Please choose Rancher Helm repository [latest/stable/prime]: "
+read helm_channel
 
-# add needed helm charts
-helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+case $helm_channel in
+  latest)
+    helm_repo_name="rancher-latest"
+    helm_repo_url="https://releases.rancher.com/server-charts/latest"
+    ;;
+  stable)
+    helm_repo_name="rancher-stable"
+    helm_repo_url="https://releases.rancher.com/server-charts/stable"
+    ;;
+  prime)
+    helm_repo_name="rancher-prime"
+    helm_repo_url="https://charts.rancher.com/server-charts/prime"
+    ;;
+  *)
+    echo "Invalid input. Please choose one of: latest, stable, prime"
+    exit 1
+    ;;
+esac
+
+# install Helm if not present
+if ! command -v helm &> /dev/null; then
+  echo "Installing Helm..."
+  sudo curl -#L https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+fi
+
+# Add helm repo
+helm repo add "$helm_repo_name" "$helm_repo_url"
 helm repo add jetstack https://charts.jetstack.io
+helm repo update
 
-
-# add the cert-manager CRD
+# install cert-manager CRDs
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.6.1/cert-manager.crds.yaml
 
-# helm install jetstack
-helm upgrade -i  cert-manager jetstack/cert-manager \
+# install cert-manager
+helm upgrade -i cert-manager jetstack/cert-manager \
   --namespace cert-manager \
   --version v1.6.1 \
   --set startupapicheck.nodeSelector."kubernetes\.io/os"=linux \
   --create-namespace
-#helm upgrade -i cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace 2>&1 > /dev/null
-# wait till the cert-manager get installed
-sleep 30
+
+# wait for cert-manager components
 kubectl wait deployment -n cert-manager cert-manager --for condition=Available=True --timeout=120s
 kubectl wait deployment -n cert-manager cert-manager-cainjector --for condition=Available=True --timeout=120s
 kubectl wait deployment -n cert-manager cert-manager-webhook --for condition=Available=True --timeout=120s
 
+# install Rancher using selected repo
+helm upgrade -i rancher "$helm_repo_name"/rancher \
+  --create-namespace \
+  --namespace cattle-system \
+  --set hostname=$hostname \
+  --set bootstrapPassword=admin@12345 \
+  --set replicas=3 \
+  --version $rancher
 
-# helm install rancher
-helm upgrade -i rancher rancher-latest/rancher --create-namespace --namespace cattle-system --set hostname=$hostname --set bootstrapPassword=admin@12345 --set replicas=3 --version $rancher 2>&1 > /dev/null
-
-echo "PLEASE DON'T EXIT UNTILL THE SCRIPT ENDS COMPLETLY "
+echo "PLEASE DON'T EXIT UNTILL THE SCRIPT ENDS COMPLETELY"
 sleep 3
 
-# wait till all rancher pods get spawn
-kubectl wait deployment -n cattle-system rancher --for condition=Available=True --timeout=240s 2>&1 > /dev/null
-#kubectl wait deployment -n cattle-system rancher-webhook --for condition=Available=True --timeout=240s
+# wait till rancher pod is ready
+kubectl wait deployment -n cattle-system rancher --for condition=Available=True --timeout=240s
+
 echo "######################## "
-echo "$(date +'%F %H:%M:%S') Status: Rancher is ready to use! Please visit --> https://$hostname"
+echo "$(date +'%F %H:%M:%S') Rancher is ready to use! Please visit --> https://$hostname"
 echo "######################## "
 }
 

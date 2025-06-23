@@ -1,3 +1,4 @@
+#Note: this is for lab/test
 # curl -sS https://raw.githubusercontent.com/sandipnikale/rancher-lab-setups-scripts/refs/heads/main/set-kubeconfig.sh  | bash
 #!/bin/bash
 

@@ -1,3 +1,4 @@
+# curl -sS https://raw.githubusercontent.com/sandipnikale/rancher-lab-setups-scripts/refs/heads/main/set-kubeconfig.sh  | bash
 #!/bin/bash
 
 # Define the user for ownership (adjust if needed)

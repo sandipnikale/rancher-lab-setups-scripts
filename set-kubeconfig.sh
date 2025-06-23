@@ -12,7 +12,7 @@ sudo mkdir -p "$USER_HOME/.kube"
 sudo cp /etc/rancher/rke2/rke2.yaml "$USER_HOME/.kube/config"
 
 # Set correct permissions
-sudo chmod 600 "$USER_HOME/.kube/config"
+sudo chmod 777 "$USER_HOME/.kube/config"
 sudo chown "$USER_NAME:$USER_NAME" "$USER_HOME/.kube/config"
 
 # Create symlink for kubectl

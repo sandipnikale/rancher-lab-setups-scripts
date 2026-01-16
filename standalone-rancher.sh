@@ -107,6 +107,16 @@ fi
 install_rke2() {
 echo "$(date +'%F %H:%M:%S') Status: Installing RKE2..."
 
+sudo mkdir -p /etc/rancher/rke2
+
+# Create RKE2 configuration file
+sudo tee /etc/rancher/rke2/config.yaml > /dev/null <<EOF
+token: my-shared-secret
+EOF
+
+echo "Configuration file created successfully"
+
+
 # Install RKE2  server.
 sudo su -c 'curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION='$INSTALL_RKE2_VERSION' sh - ' 2>&1 > /dev/null
 # start and enable for restarts

@@ -34,8 +34,8 @@ echo "Configuration file created successfully"
 
 # Install RKE2 server
 echo "Installing RKE2 server..."
-curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="$INSTALL_RKE2_VERSION" sudo sh - 2>&1 > /dev/null
-
+#curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="$INSTALL_RKE2_VERSION" sudo sh - 2>&1 > /dev/null
+sudo su -c 'curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION='$INSTALL_RKE2_VERSION' sh - ' 2>&1 > /dev/null
 # Enable RKE2 service
 echo "Enabling RKE2 server service..."
 sudo systemctl enable rke2-server.service 2>&1 > /dev/null

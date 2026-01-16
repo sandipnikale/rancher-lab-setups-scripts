@@ -64,19 +64,26 @@ sudo chmod +x kubectl
 sudo mv kubectl /usr/local/bin/
 
 # Configure kubectl access
-echo "Configuring kubectl access..."
-sudo chmod 644 /etc/rancher/rke2/rke2.yaml
+# simlink all the things - kubectl
+#sudo su -c 'ln -s '$(sudo find /var/lib/rancher/rke2/data/ -name kubectl)' /usr/local/bin/kubectl 2>&1 > /dev/null'
 
-# Set KUBECONFIG environment variable
-export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-
-# Add to user's shell profile for persistence
-if [ -n "$HOME" ] && [ -f "$HOME/.bashrc" ]; then
-    if ! grep -q "KUBECONFIG=/etc/rancher/rke2/rke2.yaml" "$HOME/.bashrc"; then
-        echo "export KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> "$HOME/.bashrc"
-        echo "KUBECONFIG added to .bashrc"
-    fi
+if [ -e /usr/local/bin/kubectl ]
+then
+        sudo rm /usr/local/bin/kubectl
+else
+        echo "ready to install kubectl.."
 fi
+
+curl -sLO "https://dl.k8s.io/release/v1.20.15/bin/linux/amd64/kubectl"
+sudo chmod +x kubectl && sudo cp kubectl  /usr/local/bin/
+#wget -q  https://storage.googleapis.com/kubernetes-release/release/v1.23.7/bin/linux/amd64/kubectl && sudo chmod +x kubectl && sudo cp kubectl  /usr/local/bin/
+
+sudo su -c 'chmod 644 /etc/rancher/rke2/rke2.yaml' 2>&1 > /dev/null
+
+# add kubectl conf
+sudo cp /etc/rancher/rke2/rke2.yaml $HOME/.kube/ && sudo mv $HOME/.kube/rke2.yaml $HOME/.kube/config
+# sudo su -c 'export KUBECONFIG=/etc/rancher/rke2/rke2.yaml'
+# export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
 
 echo "RKE2 installation completed successfully!"
 echo "Run 'kubectl get nodes' to verify the installation"

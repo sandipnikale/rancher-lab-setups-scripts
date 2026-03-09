@@ -8,6 +8,15 @@ The **Rancher VEX Scanner** is a security tool built to turn complicated vulnera
 *   **Manual Triage**: Instead of spending hours checking CVEs one by one, the tool does the cross-referencing for you in seconds.
 *   **Scattered Data**: It pulls together data from the CVE database, Rancher scan portals, and VEX reports into a single, easy-to-read dashboard.
 
+### **The Traditional Manual Triage**
+
+1.  **Understand the Customer Report**: Analyse the reports generated with the scanner tool  (Trivy, Prisma, Aqua, etc.).
+2.  **Validate the CVE Against the Image**: Confirm if the CVE is actually present in that specific version.
+3.  **Check if It Is a False Positive**: Manually verify if the finding is a false positive (many tools only match versions, not actual patches).
+4.  **Check If the CVE Is Already Fixed**: Look up if a fix or suppression exists in engineering databases.
+5.  **Identify the Fixed Version**: If yes, determine exactly which release version contains the patch.
+
+---
 ---
 
 ## 2. Key Features 

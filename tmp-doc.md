@@ -10,7 +10,7 @@ The **Rancher VEX Scanner** is a security tool built to turn complicated vulnera
 
 ---
 
-## 2. Key Features (The "Wow" Factor)
+## 2. Key Features 
 ### **A. Smart Filtering (VEX Intelligence)**
 The tool doesn't just scan; it **filters**. By applying official VEX data at runtime, it identifies which vulnerabilities are "Not Affected" or "Already Mitigated," so you only see what truly needs your attention.
 

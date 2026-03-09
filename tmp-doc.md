@@ -1,83 +1,48 @@
 # Rancher VEX Scanner: Project Overview & Demo Guide
 
-## 1. Project Overview & Engineering Goals
-The **Rancher VEX Scanner** is an **ephemeral security orchestration engine**. It bridges the gap between raw vulnerability telemetry (Trivy) and official security **"Ground Truth"** (VEX/VDB).
+## 1. What is the Rancher VEX Scanner?
+The **Rancher VEX Scanner** is a security tool built to turn complicated vulnerability reports into clear, actionable data. It automatically "cleans up" scan results by filtering out vulnerabilities that don't actually affect Rancher, using official engineering VEX (Vulnerability Exploitability eXchange) reports as the source of truth.
 
-### **Core Problem: Triage Velocity**
-*   **Low Signal-to-Noise Ratio**: Standard scanners generate exhaustive CVE lists. VEX-informed scanning identifies which findings are actually exploitable in the specific Rancher context.
-*   **Manual Correlation Overhead**: Engineering teams manually map CVEs to SUSE/Rancher Prime advisories. This tool automates that mapping via cluster-aware discovery and AI.
-*   **Data Siloing**: Integrates fragmented data sources (CVE Database, Rancher Scans portal, VEX Hub) into a unified **Analysis Engine**.
-
----
-
-## 2. Key Features 
-### **A. VEX-Driven Noise Suppression**
-Applies **Vulnerability Exploitability eXchange (VEX)** data at runtime to triage results automatically.
-*   Provides automated suppression for CVEs that have been verified by Engineering as "Not Affected" or "Fixed."
-*   Exposes the **Engineering Logic** directly (e.g., *"library present but unimported"*), providing immediate audit-ready justification.
-
-### **B. Environment-Specific Awareness (Auto-Discovery)**
-The engine is **Stateless but Cluster-Aware**.
-*   It auto-discovers Rancher/K8s versions to ensure the analysis is tailored to the specific **Upstream/Downstream** versions you are actually running.
-
-### **C. AI-Powered Triage (RAG-lite Pattern)**
-*   **The Scenario**: A customer provides a bulk scan report (PDF/CSV) with hundreds of un-triaged findings.
-*   **The Intelligence**: The tool uses an **AI Correlation Engine (Gemini 2.0)** to cross-reference customer findings with internal Rancher VEX data, providing an instant human-readable triage report.
+### **The Problem It Solves:**
+*   **Security Noise**: Most scanners report every possible risk, even if it’s a false positive. This tool hides that noise.
+*   **Manual Triage**: Instead of spending hours checking CVEs one by one, the tool does the cross-referencing for you in seconds.
+*   **Scattered Data**: It pulls together data from the CVE database, Rancher scan portals, and VEX reports into a single, easy-to-read dashboard.
 
 ---
 
-## 3. Technical Architecture
-*   **Backend**: FastAPI (Python) – Lightweight and high-performance.
-*   **Frontend**: HTMX & Tailwind CSS – Modern, reactive UI without the bloat of a heavy SPA.
-*   **Executors**: Kubernetes Jobs – Scans run as isolated, ephemeral pods. This scales horizontally without impacting the main web server.
-*   **Bridge**: Integrated with `rancher/vexhub` and `scans.rancher.com`.
+## 2. Key Features (The "Wow" Factor)
+### **A. Smart Filtering (VEX Intelligence)**
+The tool doesn't just scan; it **filters**. By applying official VEX data at runtime, it identifies which vulnerabilities are "Not Affected" or "Already Mitigated," so you only see what truly needs your attention.
+
+### **B. Cluster-Aware Performance**
+The scanner knows its environment. It automatically detects your Rancher and Kubernetes versions and tailors its security analysis to match exactly what you are running—no manual configuration required.
+
+### **C. AI-Powered Analysis (Gemini 2.0)**
+*   **The Scenario**: You have a 100-page scan report from a customer and need to know which findings are real risks.
+*   **The Solution**: Upload the report, and the AI (Gemini) will cross-reference every finding against Rancher’s official security data to tell you exactly: "This is safe," "This is affected," or "This is resolved."
 
 ---
 
-## 4. How it's different from existing tools
-| Feature | Standard Scanners (Raw Trivy/Grype) | Rancher VEX Scanner |
+## 3. How it's different from traditional tools
+| Feature | Standard Scanners (Trivy/Grype) | Rancher VEX Scanner |
 | :--- | :--- | :--- |
-| **Filtered Results** | No (Reports everything) | **Yes** (Hides noise using VEX) |
-| **Context** | None | **Cluster-Aware** (Knows your Rancher version) |
-| **Report Triage** | Manual manual analysis | **AI-Automated** (Gemini correlation) |
-| **Upstream Info** | Hard to find | **Bundled Release Finder** (Finds fix versions) |
+| **Accuracy** | Reports everything (lots of noise) | **Filters noise** using official VEX data |
+| **Effort** | Hours of manual checking | **Instant, automated answers** |
+| **Context** | Generic security info | **Cluster-Aware** (Knows your setup) |
+| **Intelligence** | Static data only | **AI-Powered** triage and advice |
 
 ---
 
-## 5. UI Sections: Behind the Scenes
-How each component handles data and orchestration:
-
-### **Tab 1: Single Image Scan**
-*   **Behind the scenes**: 
-    1.  Orchestrates an **ephemeral K8s Job** using the `aquasec/trivy` container.
-    2.  Injects a VEX repository configuration at runtime to filter against `rancher/vexhub`.
-    3.  Automates local resource cleanup via **Job TTL** after results are streamed to the backend.
-
-### **Tab 2: Batch Scan**
-*   **Behind the scenes**:
-    1.  Processes image lists via an **Asynchronous Worker Lifecycle**.
-    2.  State is managed via unique **Job IDs**; the frontend receives updates via **Server-Sent Events (SSE)** for highly reactive progress tracking.
-    3.  Aggregates data into a comprehensive **VEX-enriched CSV** audit log.
-
-### **Tab 3: Component Explorer**
-*   **Behind the scenes**:
-    1.  Uses **Docker Hub API Integration** for tag discovery.
-    2.  Runs a **SBOM-only scan mode** to quickly index package versions without full vulnerability database lookups.
-
-### **Tab 4: Release Finder**
-*   **Behind the scenes**:
-    1.  Indexes **Upstream Manifests** from GitHub Releases (RKE2, K3s, Rancher).
-    2.  Provides near-instant correlation across thousands of images using a **server-side memory cache**.
-
-### **Tab 5: AI Analysis (The Intelligence Layer)**
-*   **Behind the scenes**:
-    1.  **Extracts & Tokenizes**: Parses customer PDF/CSV telemetry.
-    2.  **Context Augmentation**: Merges findings with **Live Cluster Context** and **Global VEX Ground Truth**.
-    3.  **Triage Recommendation**: AI classifies findings as *Suppressed (VEX)*, *Affected (Live)*, or *Safe (False Positive)* based on the merged context.
+## 4. UI Sections: Behind the Scenes
+*   **Single Image Scan**: Fires off an isolated, temporary Kubernetes Job to scan any image you provide.
+*   **Batch Scan**: Efficiently processes a large list of images in the background and generates a detailed CSV report.
+*   **Component Explorer**: A quick way to "look inside" an image to see exactly which versions of packages it contains.
+*   **Release Finder**: A search engine to find which Rancher, RKE2, or K3s releases include a specific image or security fix.
+*   **AI Analysis**: A central hub where you upload reports and let Gemini correlate them with official security data.
 
 ---
 
-## 6. Demo Flow Ideas
-1.  **Tab 1: Single Scan**: Run a scan on `rancher/rancher:v2.8.2` and show the "VEX" status vs normal "Fixed" status.
-2.  **Tab 4: Release Finder**: Search for a package (e.g., `coredns`) and show how it locates which RKE2/K3s releases bundle it.
-3.  **Tab 5: AI Analysis**: (The highlight) Upload a sample CVE list and show Gemini correlating it with "Ground Truth" VEX data to provide instant answers.
+## 5. Demo Flow: Showing the Value
+1.  **The "Before & After"**: Run a scan on an image and show how many "Affected" findings are actually explained away as "Safe" by the VEX logic.
+2.  **The "Fix Finder"**: Use the Release Finder to show a team exactly which version of Rancher or K3s they need to upgrade to for a specific fix.
+3.  **The "Instant Triage" (The Hero Demo)**: Upload a customer report to the AI tab and show how a pile of 50 CVEs becomes a clean, prioritized triage report in 30 seconds.
